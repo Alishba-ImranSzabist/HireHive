@@ -13,6 +13,7 @@ class WelcomeScreen extends StatelessWidget {
       backgroundColor: Color(0xFF021A54),
       body: Center(
         child: Padding(
+
           padding: EdgeInsets.all(30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

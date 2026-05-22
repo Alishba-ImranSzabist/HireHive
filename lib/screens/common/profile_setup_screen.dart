@@ -60,7 +60,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 border: Border.all(color: Color(0xFF021A54)),
               ),
               child: Text(
-                widget.role == "freelancer" ? "👨‍💻 Freelancer Profile" : "🏢 Client Profile",
+                widget.role == "freelancer" ? "👨 Freelancer Profile" : "🏢 Client Profile",
                 style: TextStyle(color: Color(0xFF021A54), fontWeight: FontWeight.bold),
               ),
             ),
