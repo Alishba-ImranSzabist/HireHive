@@ -1,11 +1,6 @@
-
-
-
-// Bottom nav: Jobs | Applications | Profile
-// setState se tab switch
-
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
+import 'package:provider/provider.dart';
+import '../../provider/auth_provider.dart';
 import 'freelancer_jobs_screen.dart';
 import 'freelancer_applications_screen.dart';
 import 'freelancer_profile_screen.dart';
@@ -18,7 +13,6 @@ class FreelancerHome extends StatefulWidget {
 class _FreelancerHomeState extends State<FreelancerHome> {
   int currentIndex = 0;
 
-  // Screens list
   final List<Widget> screens = [
     FreelancerJobsScreen(),
     FreelancerApplicationsScreen(),
@@ -27,9 +21,12 @@ class _FreelancerHomeState extends State<FreelancerHome> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final name = auth.name ?? '';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Hello, ${currentUser.name.isEmpty ? 'Freelancer' : currentUser.name}"),
+        title: Text("Hello, ${name.isEmpty ? 'Freelancer' : name}"),
         automaticallyImplyLeading: false,
       ),
       body: screens[currentIndex],

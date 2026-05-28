@@ -1,11 +1,7 @@
-
-
-// Name, Email, Password + Role dropdown
-//  from Constructor  data pass → ProfileSetup
-
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
-import 'profile_setup_screen.dart';
+import 'package:provider/provider.dart';
+import '../../provider/auth_provider.dart';
+import '../../services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -13,13 +9,40 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  // Controllers
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
-  // Role selection
   String selectedRole = "freelancer";
+  bool loading = false;
+
+  void register() async {
+    if (nameController.text.isEmpty || emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fill out the all fields!"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    setState(() => loading = true);
+    final authProvider = context.read<AuthProvider>();
+    final result = await AuthService(authProvider).register(
+      nameController.text.trim(),
+      emailController.text.trim(),
+      passwordController.text,
+      selectedRole,
+    );
+    setState(() => loading = false);
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Account created successfully! Please login to continue."), backgroundColor: Colors.green),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? "Register failed"), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,55 +53,32 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             SizedBox(height: 10),
             Text("Join HireHive", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF021A54))),
             SizedBox(height: 5),
             Text("Create your account to get started", style: TextStyle(color: Colors.grey)),
             SizedBox(height: 30),
-
-            // Name Field
             TextField(
               controller: nameController,
-              decoration: InputDecoration(
-                labelText: "Full Name",
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
+              decoration: InputDecoration(labelText: "Full Name", prefixIcon: Icon(Icons.person), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             ),
             SizedBox(height: 15),
-
-            // Email Field
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: "Email",
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
+              decoration: InputDecoration(labelText: "Email", prefixIcon: Icon(Icons.email), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             ),
             SizedBox(height: 15),
-
-            // Password Field
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(
-                labelText: "Password",
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
+              decoration: InputDecoration(labelText: "Password", prefixIcon: Icon(Icons.lock), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             ),
             SizedBox(height: 20),
-
-            // Role Selection — simple aur clear
             Text("I am a:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-
             Row(
               children: [
-                // Freelancer option
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => selectedRole = "freelancer"),
@@ -93,18 +93,13 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           Icon(Icons.work, color: selectedRole == "freelancer" ? Colors.white : Color(0xFF021A54)),
                           SizedBox(height: 5),
-                          Text("Freelancer", style: TextStyle(
-                            color: selectedRole == "freelancer" ? Colors.white : Color(0xFF021A54),
-                            fontWeight: FontWeight.bold,
-                          )),
+                          Text("Freelancer", style: TextStyle(color: selectedRole == "freelancer" ? Colors.white : Color(0xFF021A54), fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
                   ),
                 ),
                 SizedBox(width: 15),
-
-                // Client option
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => selectedRole = "client"),
@@ -119,10 +114,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           Icon(Icons.business, color: selectedRole == "client" ? Colors.white : Color(0xFF021A54)),
                           SizedBox(height: 5),
-                          Text("Client", style: TextStyle(
-                            color: selectedRole == "client" ? Colors.white : Color(0xFF021A54),
-                            fontWeight: FontWeight.bold,
-                          )),
+                          Text("Client", style: TextStyle(color: selectedRole == "client" ? Colors.white : Color(0xFF021A54), fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -131,33 +123,14 @@ class _SignupScreenState extends State<SignupScreen> {
               ],
             ),
             SizedBox(height: 30),
-
-            // Signup Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  // Save to global user
-                  currentUser.name = nameController.text;
-                  currentUser.email = emailController.text;
-                  currentUser.role = selectedRole;
-
-                  // Constructor se data pass
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProfileSetupScreen(role: selectedRole),
-                    ),
-                  );
-                },
-                child: Text("Sign Up", style: TextStyle(fontSize: 16)),
+                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                onPressed: loading ? null : register,
+                child: loading ? CircularProgressIndicator(color: Colors.white) : Text("Sign Up", style: TextStyle(fontSize: 16)),
               ),
             ),
-
             SizedBox(height: 15),
             Center(
               child: TextButton(

@@ -1,9 +1,6 @@
-
-
-// Profile info show + Edit button
-
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
+import 'package:provider/provider.dart';
+import '../../provider/auth_provider.dart';
 import '../common/welcome_screen.dart';
 
 class ClientProfileScreen extends StatefulWidget {
@@ -13,12 +10,9 @@ class ClientProfileScreen extends StatefulWidget {
 
 class _ClientProfileScreenState extends State<ClientProfileScreen> {
 
-  // Edit dialog open
   void _openEditDialog() {
-    final nameController    = TextEditingController(text: currentUser.name);
-    final phoneController   = TextEditingController(text: currentUser.phone);
-    final companyController = TextEditingController(text: currentUser.company);
-    final bioController     = TextEditingController(text: currentUser.bio);
+    final auth = context.read<AuthProvider>();
+    final nameController = TextEditingController(text: auth.name ?? '');
 
     showDialog(
       context: context,
@@ -36,35 +30,6 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
-              SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: "Phone",
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              SizedBox(height: 12),
-              TextField(
-                controller: companyController,
-                decoration: InputDecoration(
-                  labelText: "Company Name",
-                  prefixIcon: Icon(Icons.business),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              SizedBox(height: 12),
-              TextField(
-                controller: bioController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: "Bio",
-                  prefixIcon: Icon(Icons.info),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
             ],
           ),
         ),
@@ -75,14 +40,15 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF021A54)),
-            onPressed: () {
-              // Global currentUser update + setState se UI refresh
-              setState(() {
-                currentUser.name    = nameController.text;
-                currentUser.phone   = phoneController.text;
-                currentUser.company = companyController.text;
-                currentUser.bio     = bioController.text;
-              });
+            onPressed: () async {
+              final auth = context.read<AuthProvider>();
+              await auth.setUser(
+                auth.token!,
+                auth.role!,
+                nameController.text,
+                auth.userId!,
+              );
+              setState(() {});
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("Profile updated!"), backgroundColor: Colors.green),
@@ -97,13 +63,15 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final name = auth.name ?? '';
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(20),
       child: Column(
         children: [
           SizedBox(height: 10),
 
-          // Avatar
           CircleAvatar(
             radius: 45,
             backgroundColor: Color(0xFF021A54),
@@ -111,29 +79,23 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
           ),
           SizedBox(height: 15),
 
-          // Name
           Text(
-            currentUser.name.isEmpty ? "Your Name" : currentUser.name,
+            name.isEmpty ? "Your Name" : name,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 5),
 
-          // Role badge
           Chip(
             label: Text("Client", style: TextStyle(color: Colors.white)),
             backgroundColor: Color(0xFF021A54),
           ),
           SizedBox(height: 20),
 
-          // Info cards
-          _infoCard(Icons.email,    "Email",   currentUser.email.isEmpty   ? "Not set" : currentUser.email),
-          _infoCard(Icons.phone,    "Phone",   currentUser.phone.isEmpty   ? "Not set" : currentUser.phone),
-          _infoCard(Icons.business, "Company", currentUser.company.isEmpty ? "Not set" : currentUser.company),
-          _infoCard(Icons.info,     "Bio",     currentUser.bio.isEmpty     ? "Not set" : currentUser.bio),
+          _infoCard(Icons.person, "Name", name.isEmpty ? "Not set" : name),
+          _infoCard(Icons.badge, "User ID", auth.userId?.toString() ?? "Not set"),
 
           SizedBox(height: 20),
 
-          // EDIT PROFILE button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -149,7 +111,6 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
           ),
           SizedBox(height: 12),
 
-          // LOGOUT button
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -161,8 +122,8 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
               ),
               icon: Icon(Icons.logout),
               label: Text("Logout", style: TextStyle(fontSize: 15)),
-              onPressed: () {
-                currentUser = UserModel(role: "client");
+              onPressed: () async {
+                await context.read<AuthProvider>().logout();
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => WelcomeScreen()),
@@ -195,7 +156,7 @@ class _ClientProfileScreenState extends State<ClientProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
-                Text(value,  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
