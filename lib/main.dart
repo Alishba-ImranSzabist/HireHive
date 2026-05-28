@@ -1,16 +1,28 @@
-
-
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'provider/auth_provider.dart';
 import 'screens/common/welcome_screen.dart';
+import 'screens/common/login_screen.dart';
+import 'screens/common/signup_screen.dart';
+import 'screens/freelancer/freelancer_home.dart';
+import 'screens/client/client_home.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authProvider = AuthProvider();
+  await authProvider.loadToken();
+  runApp(
+    ChangeNotifierProvider.value(
+      value: authProvider,
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'HireHive',
@@ -27,7 +39,15 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: WelcomeScreen(),
+      home: auth.isLoggedIn
+          ? (auth.role == 'client' ? ClientHome() : FreelancerHome())
+          : WelcomeScreen(),
+      routes: {
+        '/login': (_) => LoginScreen(),
+        '/register': (_) => SignupScreen(),
+        '/freelancer': (_) => FreelancerHome(),
+        '/client': (_) => ClientHome(),
+      },
     );
   }
 }

@@ -1,10 +1,6 @@
-
-
-// Bottom nav: My Jobs | Applications | Post | Profile
-// tab switch from setstate
-
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
+import 'package:provider/provider.dart';
+import '../../provider/auth_provider.dart';
 import 'client_jobs_screen.dart';
 import 'client_applications_screen.dart';
 import 'post_job_screen.dart';
@@ -27,9 +23,12 @@ class _ClientHomeState extends State<ClientHome> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final name = auth.name ?? '';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Hello, ${currentUser.name.isEmpty ? 'Client' : currentUser.name}"),
+        title: Text("Hello, ${name.isEmpty ? 'Client' : name}"),
         automaticallyImplyLeading: false,
       ),
       body: screens[currentIndex],
