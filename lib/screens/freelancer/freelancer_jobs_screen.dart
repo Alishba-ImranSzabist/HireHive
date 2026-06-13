@@ -12,50 +12,49 @@ class FreelancerJobsScreen extends StatefulWidget {
 }
 
 class _FreelancerJobsScreenState extends State<FreelancerJobsScreen> {
-  String searchQuery = "";
-  List<JobModel> allJobs = [];
-  bool loading = true;
+  List<JobModel> _allJobs = [];
+  String _searchQuery = "";
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    loadJobs();
+    _loadJobs();
   }
 
-  void loadJobs() async {
-    final auth = context.read<AuthProvider>();
-    final service = JobService(ApiClient(auth));
+  void _loadJobs() async {
     try {
-      final data = await service.fetchJobs();
-      setState(() { allJobs = data; loading = false; });
-    } catch (e) {
-      setState(() => loading = false);
+      final auth = context.read<AuthProvider>();
+      final data = await JobService(ApiClient(auth)).fetchJobs();
+      setState(() { _allJobs = data; _loading = false; });
+    } catch (_) {
+      setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load jobs!"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Failed to load jobs."), backgroundColor: Colors.red),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return Center(child: CircularProgressIndicator());
+    if (_loading) return Center(child: CircularProgressIndicator());
 
-    List<JobModel> filteredJobs = allJobs
-        .where((job) => job.title.toLowerCase().contains(searchQuery.toLowerCase()))
+    final filtered = _allJobs
+        .where((j) => j.title.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
 
     return Column(
       children: [
-        // Search bar
         Padding(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
           child: TextField(
-            onChanged: (value) => setState(() => searchQuery = value),
+            onChanged: (v) => setState(() => _searchQuery = v),
             decoration: InputDecoration(
               hintText: "Search jobs...",
               prefixIcon: Icon(Icons.search),
               filled: true,
               fillColor: Colors.grey[100],
+              contentPadding: EdgeInsets.symmetric(vertical: 0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(25),
                 borderSide: BorderSide.none,
@@ -63,44 +62,34 @@ class _FreelancerJobsScreenState extends State<FreelancerJobsScreen> {
             ),
           ),
         ),
-
-        // Jobs count
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              "${filteredJobs.length} jobs available",
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
+            child: Text("${filtered.length} jobs available", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
           ),
         ),
-        SizedBox(height: 5),
-
-        // Jobs list
         Expanded(
-          child: filteredJobs.isEmpty
-              ? Center(child: Text("No jobs found", style: TextStyle(color: Colors.grey)))
+          child: filtered.isEmpty
+              ? Center(child: Text("No jobs found.", style: TextStyle(color: Colors.grey)))
               : RefreshIndicator(
-                  onRefresh: () async => loadJobs(),
+                  onRefresh: () async => _loadJobs(),
                   child: ListView.builder(
-                    itemCount: filteredJobs.length,
+                    padding: EdgeInsets.all(12),
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final job = filteredJobs[index];
+                      final job = filtered[index];
                       return Card(
-                        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        margin: EdgeInsets.symmetric(vertical: 5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 1,
                         child: ListTile(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: CircleAvatar(
                             backgroundColor: Color(0xFF021A54).withOpacity(0.1),
-                            child: Icon(Icons.work, color: Color(0xFF021A54)),
+                            child: Icon(Icons.work_outline, color: Color(0xFF021A54)),
                           ),
-                          title: Text(
-                            job.title,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF021A54)),
-                          ),
+                          title: Text(job.title, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF021A54))),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -109,15 +98,11 @@ class _FreelancerJobsScreenState extends State<FreelancerJobsScreen> {
                               Text(job.postedBy, style: TextStyle(color: Colors.grey, fontSize: 12)),
                             ],
                           ),
-                          trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => JobDetailScreen(job: job, role: "freelancer"),
-                              ),
-                            );
-                          },
+                          trailing: Icon(Icons.chevron_right, color: Colors.grey),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => JobDetailScreen(job: job, role: "freelancer")),
+                          ),
                         ),
                       );
                     },

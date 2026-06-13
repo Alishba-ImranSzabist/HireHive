@@ -16,11 +16,18 @@ class AuthService {
       );
       final data = jsonDecode(res.body);
       if (res.statusCode == 200) {
+        // Save ALL user fields from login response
         await auth.setUser(
-          data['token'],
-          data['role'],
-          data['name'],
-          data['id'],
+          token:    data['token'],
+          role:     data['role'],
+          name:     data['name'],
+          userId:   data['id'],
+          email:    data['email']    ?? '',
+          phone:    data['phone']    ?? '',
+          skills:   data['skills']   ?? '',
+          company:  data['company']  ?? '',
+          bio:      data['bio']      ?? '',
+          imageUrl: data['image_url'] ?? '',
         );
         return {"success": true, "role": data['role']};
       }
@@ -31,22 +38,20 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> register(
-    String name, String email, String password, String role,
-    {String phone = "", String skills = "", String company = "", String bio = ""}
-  ) async {
+    String name, String email, String password, String role, {
+    String phone   = "",
+    String skills  = "",
+    String company = "",
+    String bio     = "",
+  }) async {
     try {
       final res = await http.post(
         Uri.parse("${AppConfig.baseUrl}/auth/register"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "name": name,
-          "email": email,
-          "password": password,
-          "role": role,
-          "phone": phone,
-          "skills": skills,
-          "company": company,
-          "bio": bio,
+          "name": name, "email": email, "password": password,
+          "role": role,  "phone": phone, "skills": skills,
+          "company": company, "bio": bio,
         }),
       );
       final data = jsonDecode(res.body);

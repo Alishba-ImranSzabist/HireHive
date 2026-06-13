@@ -11,39 +11,40 @@ class PostJobScreen extends StatefulWidget {
 }
 
 class _PostJobScreenState extends State<PostJobScreen> {
-  final titleController = TextEditingController();
-  final budgetController = TextEditingController();
-  final descController = TextEditingController();
-  bool loading = false;
+  final _titleController  = TextEditingController();
+  final _budgetController = TextEditingController();
+  final _descController   = TextEditingController();
+  bool _loading = false;
 
-  void postJob() async {
-    if (titleController.text.isEmpty || budgetController.text.isEmpty) {
+  void _postJob() async {
+    if (_titleController.text.trim().isEmpty || _budgetController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Title and budget are required."), backgroundColor: Colors.red),
       );
       return;
     }
-    setState(() => loading = true);
+
+    setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     final job = JobModel(
-      title: titleController.text,
-      budget: budgetController.text,
-      description: descController.text.isEmpty ? "No description" : descController.text,
-      postedBy: auth.name ?? "Client",
+      title:       _titleController.text.trim(),
+      budget:      _budgetController.text.trim(),
+      description: _descController.text.trim().isEmpty ? "No description provided." : _descController.text.trim(),
+      postedBy:    auth.name ?? "Client",
     );
     final success = await JobService(ApiClient(auth)).addJob(job);
-    setState(() => loading = false);
+    setState(() => _loading = false);
 
     if (success) {
-      titleController.clear();
-      budgetController.clear();
-      descController.clear();
+      _titleController.clear();
+      _budgetController.clear();
+      _descController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Job posted Successfully!"), backgroundColor: Colors.green),
+        SnackBar(content: Text("Job posted successfully!"), backgroundColor: Colors.green),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Job posting failed. Please try again."), backgroundColor: Colors.red),
+        SnackBar(content: Text("Failed to post job. Please try again."), backgroundColor: Colors.red),
       );
     }
   }
@@ -57,33 +58,56 @@ class _PostJobScreenState extends State<PostJobScreen> {
         children: [
           SizedBox(height: 10),
           Text("Post a New Job", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF021A54))),
-          SizedBox(height: 5),
-          Text("Fill the details below to post your job", style: TextStyle(color: Colors.grey)),
-          SizedBox(height: 25),
+          SizedBox(height: 4),
+          Text("Fill in the details below", style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          SizedBox(height: 28),
           TextField(
-            controller: titleController,
-            decoration: InputDecoration(labelText: "Job Title", hintText: "e.g. Flutter App Developer", prefixIcon: Icon(Icons.work), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+            controller: _titleController,
+            decoration: InputDecoration(
+              labelText: "Job Title",
+              hintText: "e.g. Flutter App Developer",
+              prefixIcon: Icon(Icons.work_outline),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 14),
           TextField(
-            controller: budgetController,
+            controller: _budgetController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: "Budget (Rs.)", hintText: "e.g. 50000", prefixIcon: Icon(Icons.monetization_on), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+            decoration: InputDecoration(
+              labelText: "Budget (Rs.)",
+              hintText: "e.g. 50000",
+              prefixIcon: Icon(Icons.payments_outlined),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 14),
           TextField(
-            controller: descController,
+            controller: _descController,
             maxLines: 4,
-            decoration: InputDecoration(labelText: "Job Description", hintText: "Describe what you need...", prefixIcon: Icon(Icons.description), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+            decoration: InputDecoration(
+              labelText: "Job Description",
+              hintText: "Describe what you need...",
+              prefixIcon: Icon(Icons.description_outlined),
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          SizedBox(height: 30),
+          SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-              icon: loading ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Icon(Icons.send),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF021A54),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: _loading
+                  ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Icon(Icons.send_outlined),
               label: Text("Post Job", style: TextStyle(fontSize: 16)),
-              onPressed: loading ? null : postJob,
+              onPressed: _loading ? null : _postJob,
             ),
           ),
         ],

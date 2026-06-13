@@ -8,6 +8,7 @@ import 'screens/freelancer/freelancer_home.dart';
 import 'screens/client/client_home.dart';
 
 void main() async {
+  //Flutter engine ready karta ha   async kaam karne se pehle zaroor chahiye
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
   await authProvider.loadToken();
