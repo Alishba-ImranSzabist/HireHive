@@ -11,9 +11,9 @@ class FreelancerHome extends StatefulWidget {
 }
 
 class _FreelancerHomeState extends State<FreelancerHome> {
-  int currentIndex = 0;
+  int _currentIndex = 0;
 
-  final List<Widget> screens = [
+  final List<Widget> _screens = [
     FreelancerJobsScreen(),
     FreelancerApplicationsScreen(),
     FreelancerProfileScreen(),
@@ -22,23 +22,25 @@ class _FreelancerHomeState extends State<FreelancerHome> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final name = auth.name ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Hello, ${name.isEmpty ? 'Freelancer' : name}"),
+        title: Text("Hello, ${auth.name?.isEmpty == true ? 'Freelancer' : auth.name ?? 'Freelancer'}"),
         automaticallyImplyLeading: false,
+        backgroundColor: Color(0xFF021A54),
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: screens[currentIndex],
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
+        currentIndex: _currentIndex,
         selectedItemColor: Color(0xFF021A54),
         unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => currentIndex = index),
+        onTap: (i) => setState(() => _currentIndex = i),
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.work), label: "Jobs"),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Applications"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.work_outline),      activeIcon: Icon(Icons.work),      label: "Jobs"),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt_outlined),  activeIcon: Icon(Icons.list_alt),  label: "Applications"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline),     activeIcon: Icon(Icons.person),    label: "Profile"),
         ],
       ),
     );

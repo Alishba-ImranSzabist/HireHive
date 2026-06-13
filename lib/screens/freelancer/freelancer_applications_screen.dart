@@ -10,87 +10,157 @@ class FreelancerApplicationsScreen extends StatefulWidget {
 }
 
 class _FreelancerApplicationsScreenState extends State<FreelancerApplicationsScreen> {
-  List<dynamic> applications = [];
-  bool loading = true;
+  List<dynamic> _applications = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    loadApplications();
+    _load();
   }
 
-  void loadApplications() async {
+  void _load() async {
     final auth = context.read<AuthProvider>();
     final data = await ApplicationService(ApiClient(auth)).fetchMyApplications();
-    setState(() { applications = data; loading = false; });
+    setState(() { _applications = data; _loading = false; });
   }
 
-  Color _statusColor(String status) {
-    if (status == 'accepted') return Colors.green;
-    if (status == 'rejected') return Colors.red;
+  Color _statusColor(String s) {
+    if (s == 'accepted') return Colors.green;
+    if (s == 'rejected') return Colors.red;
     return Colors.orange;
   }
 
-  IconData _statusIcon(String status) {
-    if (status == 'accepted') return Icons.check_circle;
-    if (status == 'rejected') return Icons.cancel;
-    return Icons.access_time;
+  IconData _statusIcon(String s) {
+    if (s == 'accepted') return Icons.check_circle_outline;
+    if (s == 'rejected') return Icons.cancel_outlined;
+    return Icons.access_time_outlined;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return Center(child: CircularProgressIndicator());
+    if (_loading) return Center(child: CircularProgressIndicator(color: Color(0xFF021A54)));
 
-    if (applications.isEmpty) return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.list_alt, size: 60, color: Colors.grey[300]),
-          SizedBox(height: 10),
-          Text("There are no applications right now.", style: TextStyle(color: Colors.grey)),
-          SizedBox(height: 5),
-          Text("View jobs and apply.", style: TextStyle(color: Colors.grey, fontSize: 12)),
+    if (_applications.isEmpty) return Center(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(color: Color(0xFF021A54).withOpacity(0.06), shape: BoxShape.circle),
+          child: Icon(Icons.list_alt_outlined, size: 52, color: Color(0xFF021A54).withOpacity(0.4)),
+        ),
+        SizedBox(height: 16),
+        Text("No Applications Yet", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54)),
+        SizedBox(height: 6),
+        Text("Browse available jobs and\napply to get started.",
+            textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+      ]),
+    );
+
+    final accepted = _applications.where((a) => a['status'] == 'accepted').length;
+    final pending  = _applications.where((a) => a['status'] == 'pending').length;
+
+    return RefreshIndicator(
+      onRefresh: () async => _load(),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(14, 14, 14, 8),
+              child: Row(children: [
+                _statChip("Total",    _applications.length.toString(), Colors.blueGrey),
+                SizedBox(width: 8),
+                _statChip("Pending",  pending.toString(),              Colors.orange),
+                SizedBox(width: 8),
+                _statChip("Accepted", accepted.toString(),             Colors.green),
+              ]),
+            ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(14, 4, 14, 14),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final app    = _applications[index];
+                  final status = app['status'] ?? 'pending';
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white, borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _statusColor(status).withOpacity(0.2)),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: Offset(0, 2))],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _statusColor(status).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(_statusIcon(status), color: _statusColor(status), size: 22),
+                          ),
+                          SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(app['job_title'] ?? '',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF021A54))),
+                                SizedBox(height: 4),
+                                Text("Rs. ${app['budget']}",
+                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13)),
+                                SizedBox(height: 2),
+                                Text("By ${app['posted_by']}", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _statusColor(status).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: _statusColor(status).withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  status[0].toUpperCase() + status.substring(1),
+                                  style: TextStyle(fontSize: 11, color: _statusColor(status), fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                childCount: _applications.length,
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
 
-    return RefreshIndicator(
-      onRefresh: () async => loadApplications(),
-      child: ListView.builder(
-        padding: EdgeInsets.all(10),
-        itemCount: applications.length,
-        itemBuilder: (context, index) {
-          final app = applications[index];
-          final status = app['status'] ?? 'pending';
-
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 6),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-              leading: CircleAvatar(
-                backgroundColor: _statusColor(status).withOpacity(0.1),
-                child: Icon(_statusIcon(status), color: _statusColor(status)),
-              ),
-              title: Text(app['job_title'] ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 3),
-                  Text("Rs. ${app['budget']}", style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
-                  Text("Client: ${app['posted_by']}", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-              trailing: Chip(
-                label: Text(
-                  status == 'accepted' ? "Accepted" : status == 'rejected' ? "Rejected" : "Pending",
-                  style: TextStyle(fontSize: 11, color: _statusColor(status)),
-                ),
-                backgroundColor: _statusColor(status).withOpacity(0.1),
-              ),
-            ),
-          );
-        },
+  Widget _statChip(String label, String count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(children: [
+          Text(count, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(label,  style: TextStyle(fontSize: 10, color: color.withOpacity(0.8))),
+        ]),
       ),
     );
   }

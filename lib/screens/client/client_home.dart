@@ -12,9 +12,9 @@ class ClientHome extends StatefulWidget {
 }
 
 class _ClientHomeState extends State<ClientHome> {
-  int currentIndex = 0;
+  int _currentIndex = 0;
 
-  final List<Widget> screens = [
+  final List<Widget> _screens = [
     ClientJobsScreen(),
     ClientApplicationsScreen(),
     PostJobScreen(),
@@ -24,25 +24,27 @@ class _ClientHomeState extends State<ClientHome> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final name = auth.name ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Hello, ${name.isEmpty ? 'Client' : name}"),
+        title: Text("Hello, ${auth.name?.isEmpty == true ? 'Client' : auth.name ?? 'Client'}"),
         automaticallyImplyLeading: false,
+        backgroundColor: Color(0xFF021A54),
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: screens[currentIndex],
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
+        currentIndex: _currentIndex,
         selectedItemColor: Color(0xFF021A54),
         unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => currentIndex = index),
+        onTap: (i) => setState(() => _currentIndex = i),
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.work), label: "My Jobs"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Applicants"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: "Post Job"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.work_outline),         activeIcon: Icon(Icons.work),         label: "My Jobs"),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline),       activeIcon: Icon(Icons.people),       label: "Applicants"),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline),   activeIcon: Icon(Icons.add_circle),   label: "Post Job"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline),       activeIcon: Icon(Icons.person),       label: "Profile"),
         ],
       ),
     );
